@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    function Recommendations() {
+      const [books, setBooks] = React.useState([]);
+      const [category, setCategory] = React.useState('');
+      const [priceMin, setPriceMin] = React.useState('');
+      const [priceMax, setPriceMax] = React.useState('');
+      const [title, setTitle] = React.useState('');
+      const [summary, setSummary] = React.useState('');
+
+      const fetchBooks = async () => {
+        const params = { category, price_min: priceMin, price_max: priceMax };
+        const response = await fetch('http://localhost:8000/recommendations', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          params
+        });
+        const data = await response.json();
+        setBooks(data);
+      };
+
+      const fetchSummary = async () => {
+        const response = await fetch(`http://localhost:8000/books/summary?title=${title}`);
+        const data = await response.json();
+        setSummary(data.summary);
+      };
+
+      React.useEffect(() => {
+        fetchBooks();
+      }, [category, priceMin, priceMax]);
+
+      return (
+        <div className="p-4">
+          <h2 className="text-2xl font-bold mb-4">Book Recommendations</h2>
+          <div className="space-x-2 mb-4">
+            <input
+              className="border p-2 rounded"
+              placeholder="Category"
+              onChange={(e) => setCategory(e.target.value)}
+            />
+            <input
+              className="border p-2 rounded"
+              placeholder="Min Price"
+              onChange={(e) => setPriceMin(e.target.value)}
+            />
+            <input
+              className="border p-2 rounded"
+              placeholder="Max Price"
+              onChange={(e) => setPriceMax(e.target.value)}
+            />
+            <button
+              className="bg-blue-500 text-white p-2 rounded"
+              onClick={fetchBooks}
+            >
+              Filter Books
+            </button>
+          </div>
+          <ul className="list-disc pl-5">
+            {books.map((book) => (
+              <li key={book.id} className="mb-2">
+                {book.title} - £{book.price}
+              </li>
+            ))}
+          </ul>
+          <h2 className="text-2xl font-bold mt-4 mb-2">Book Summary</h2>
+          <div className="space-x-2 mb-4">
+            <input
+              className="border p-2 rounded"
+              placeholder="Book Title"
+              onChange={(e) => setTitle(e.target.value)}
+            />
+            <button
+              className="bg-blue-500 text-white p-2 rounded"
+              onClick={fetchSummary}
+            >
+              Get Summary
+            </button>
+          </div>
+          <p className="mt-2">{summary}</p>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<Recommendations />);
+  </script>
+</body>
+</html>
